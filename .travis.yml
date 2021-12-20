@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -f ./client/Dockerfile.dev -t   - docker push skalej/react-test ./client
+
+script:
+  - docker run skalej/react-test npm run test -- --coverage
+
+after_success:
+  - docker build -t skalej/multi-client ./client
+  - docker build -t skalej/multi-nginx ./nginx
+  - docker build -t skalej/multi-server ./server
+  - docker build -t skalej/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push skalej/multi-client
+  - docker push skalej/multi-nginx
+  - docker push skalej/multi-server
+  - docker push skalej/multi-worker
